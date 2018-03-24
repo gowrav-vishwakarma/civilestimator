@@ -9,6 +9,9 @@ class page_billdetails extends Page {
 		$bill_id = $this->app->stickyGET('bill_id');
 		$project_id = $this->app->stickyGET('project_id');
 
+		$vp = $this->add('VirtualPage');
+		$vp->set([$this,'manage_bill_detail_acl']);
+
 		$client_m = $this->add('Model_Client');
 		$client_m->load($client_id);
 
@@ -24,7 +27,8 @@ class page_billdetails extends Page {
 		}
 		$bd_m->addCondition('bill_id',$bill_id);
 
-		$c = $this->add('CRUD');
+		$c = $this->add('CRUD',$this->add('Model_ACL')->forBillDetail($bill_id));
+
 		$c->setModel($bd_m);
 
 		if($c->isEditing()){
@@ -47,7 +51,8 @@ class page_billdetails extends Page {
 			}else{
 				$g->current_row['description']=$g->model['description'];
 				$g->schedule = $g->model['schedule_id'];
-				$g->schedule_sum=0;
+				$g->schedule_sum=$g->model['qty'];
+				$g->current_row['grand_total']=$g->schedule_sum;
 			}
 
 			if(!isset($g->unit)) $g->unit = null;
@@ -62,5 +67,28 @@ class page_billdetails extends Page {
 
 		$c->grid->addOrder()->move('grand_total','after','unit')->now();
 
+		if($this->app->auth->model['is_super']){
+			$btn = $c->grid->addButton('ACL');
+			$btn->js('click')->univ()->frameURL('ACL',$vp->getURL());
+		}
+
+	}
+
+
+	function manage_bill_detail_acl($page){
+		$client_id = $page->app->stickyGET('client_id');
+		$bill_id = $this->app->stickyGET('bill_id');
+
+		$client_m = $this->add('Model_Client')->load($client_id);
+		$bill_m = $this->add('Model_Bill')->load($bill_id);
+
+		$page->add('View_Info')->set($this->app->auth->model['name'].' for '. $client_m['name'].'\'s '. $bill_m['name']);
+
+		$acl_m = $page->add('Model_ACL');
+		// $acl_m->addCondition('staff_id',$page->app->auth->model->id);
+		$acl_m->addCondition('details_of_bill_id',$bill_id);
+
+		$c = $page->add('CRUD');
+		$c->setModel($acl_m,['staff_id','allow_add','allow_edit','allow_del'],['staff','allow_add','allow_edit','allow_del']);
 	}
 }

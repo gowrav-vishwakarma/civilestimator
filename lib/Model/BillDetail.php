@@ -11,6 +11,9 @@ class Model_BillDetail extends Model_Table{
 		$this->hasOne('Bill','bill_id');
 		$this->hasOne('GSchedule','schedule_id');
 
+		$this->addField('from_rd');
+		$this->addField('to_rd');
+
 		$this->addExpression('description')->set(function($m,$q){
 			return $m->refSQL('schedule_id')->fieldQuery('description');
 		});

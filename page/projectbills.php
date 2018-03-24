@@ -19,7 +19,7 @@ class page_projectbills extends Page {
 		$bill = $this->add('Model_Bill');
 		$bill->addCondition('project_id',$pid);
 
-		$c = $this->add('CRUD');
+		$c = $this->add('CRUD',$this->add('Model_ACL')->setNoneForOthers());
 		$c->setModel($bill);
 
 		$c->grid->addColumn('Button','detail_measurement');

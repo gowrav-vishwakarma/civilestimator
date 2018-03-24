@@ -17,6 +17,10 @@ class page_generalabstract extends Page {
 		$this->title = $client_m['name']. ' - ' . $bill_m['name'] .' [Abstract]';
 		$this->add('View_Info')->set($this->title);
 
+		$f = $this->add('Form');
+		$prj_field = $f->addField('DropDown','projects')->setEmptyText('All');
+		$prj_field->setModel('Project')->addCondition('client_id',$client_id);
+
 		$gs_m = $this->add('Model_GSchedule');
 		$gs_m->addCondition('client_id',$client_id);
 
@@ -29,7 +33,7 @@ class page_generalabstract extends Page {
 			$bdm->addCondition('order','<',$bill_m['order']);
 
 			if($project_id)
-				$bdm->addCondition('project_id',$q->getField('id'));
+				$bdm->addCondition('project_id',$project_id);
 
 			return $bdm->sum('qty');
 		});
@@ -42,7 +46,7 @@ class page_generalabstract extends Page {
 			$bdm->addCondition('order',$bill_m['order']);
 			
 			if($project_id)
-				$bdm->addCondition('project_id',$q->getField('id'));
+				$bdm->addCondition('project_id',$project_id);
 			return $bdm->sum('qty');
 		});
 
@@ -57,8 +61,15 @@ class page_generalabstract extends Page {
 		$gs_m->addCondition([['previous_qty','>',0],['current_qty','>',0]]);
 
 		$g = $this->add('Grid');
-		$g->setModel($gs_m,['name','description','rate','unit','previous_qty','previous_amt','current_qty','current_amt']);
+		$g->setModel($gs_m,['name','','description','rate','unit','previous_qty','previous_amt','current_qty','current_amt']);
 
 		// $g->addTotals(['amount']);
+
+		if($f->isSubmitted()){
+			$g->js()->reload(['project_id'=>$f['projects']])->execute();
+		}
+
+		$prj_field->js('change',$f->js()->submit());
+
 	}
 }
