@@ -4,7 +4,6 @@ doc/dbupdates/*.fail
 *.swp
 *.bak
 admin/upload/*
-shared/*
 shared/addons2
 .DS_Store
 config.php
