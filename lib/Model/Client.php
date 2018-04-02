@@ -7,6 +7,7 @@ class Model_Client extends Model_Table{
 		parent::init();
 
 		$this->addField('name')->mandatory(true);
+		$this->addField('tender_premium');
 		
 		$this->hasMany('GSchedule','client_id');
 		$this->hasMany('Project','client_id');

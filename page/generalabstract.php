@@ -12,14 +12,26 @@ class page_generalabstract extends Page {
 		$client_m = $this->add('Model_Client');
 		$client_m->load($client_id);
 
-		$bill_m = $this->add('Model_Bill')->load($bill_id);
+		$bill_m = $this->add('Model_Bill');
+		if($bill_id)
+			$bill_m->load($bill_id);
 
-		$this->title = $client_m['name']. ' - ' . $bill_m['name'] .' [Abstract]';
-		$this->add('View_Info')->set($this->title);
+		$project_m = $this->add('Model_Project');
+		if($project_id)
+			$project_m->load($project_id);
 
-		$f = $this->add('Form');
-		$prj_field = $f->addField('DropDown','projects')->setEmptyText('All');
+		$this->title = $client_m['name']. ' - ' . $bill_m['name'] .' [Abstract] @' . abs($client_m['tender_premium']).'% '.($client_m['tender_premium']>0?'Above':'Below');
+		if($project_id){
+			$this->title .= " Filtered For ". $project_m['name'];
+		}
+		$v= $this->add('View');
+		$v->add('View_Info')->set($this->title);
+
+		$f = $v->add('Form');
+		$prj_field = $f->addField('DropDown','projects')->setEmptyText('All')->set($project_id);
+		$bill_field = $f->addField('DropDown','bills')->set($bill_id);
 		$prj_field->setModel('Project')->addCondition('client_id',$client_id);
+		$bill_field->setModel('Bill')->addCondition('client_id',$client_id);
 
 		$gs_m = $this->add('Model_GSchedule');
 		$gs_m->addCondition('client_id',$client_id);
@@ -60,16 +72,25 @@ class page_generalabstract extends Page {
 
 		$gs_m->addCondition([['previous_qty','>',0],['current_qty','>',0]]);
 
-		$g = $this->add('Grid');
+		
+		$g = $v->add('Grid');
 		$g->setModel($gs_m,['name','','description','rate','unit','previous_qty','previous_amt','current_qty','current_amt']);
 
-		// $g->addTotals(['amount']);
+		$g->addTotals(['previous_amt','current_amt']);
+
+		$current_amt_sum = $gs_m->sum('current_amt')->getOne();
+		$previous_amt_sum = $gs_m->sum('previous_amt')->getOne();
+
+		$str = 'Previous:'. $previous_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.($previous_amt_sum*$client_m['tender_premium']/100).'] Total: '. ($previous_amt_sum + ($previous_amt_sum*$client_m['tender_premium']/100)) .'<br/>';
+		$str .= 'Current:'. $current_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.($current_amt_sum*$client_m['tender_premium']/100).'] Total: '.($current_amt_sum + ($current_amt_sum*$client_m['tender_premium']/100));
+		$v->add('View_Info')->setHtml($str);
 
 		if($f->isSubmitted()){
-			$g->js()->reload(['project_id'=>$f['projects']])->execute();
+			$v->js()->reload(['project_id'=>$f['projects'],'bill_id'=>$f['bills']])->execute();
 		}
 
 		$prj_field->js('change',$f->js()->submit());
+		$bill_field->js('change',$f->js()->submit());
 
 	}
 }
