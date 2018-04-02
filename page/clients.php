@@ -58,8 +58,12 @@ class page_clients extends Page {
 						$this->app->redirect($this->app->url('generalabstract',['client_id'=>$client_id,'bill_id'=>$bill_id]));
 		           	}
 
+		           	if($bill_id = $_GET['qty_abstract']){
+						$this->app->redirect($this->app->url('qtyabstract',['client_id'=>$client_id,'bill_id'=>$bill_id]));
+		           	}
+
 					$c->grid->addColumn('Button','details_of_work');
-					// $c->grid->addColumn('Button','abstract');
+					$c->grid->addColumn('Button','qty_abstract');
 					$c->grid->addColumn('Button','general_abstract');
 		       });
 

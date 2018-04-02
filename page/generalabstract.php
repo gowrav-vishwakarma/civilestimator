@@ -62,6 +62,10 @@ class page_generalabstract extends Page {
 			return $bdm->sum('qty');
 		});
 
+		$gs_m->addExpression('total_qty')->set(function($m,$q){
+			return $q->expr('IFNULL([0],0)+IFNULL([1],0)',[$m->getElement('previous_qty'),$m->getElement('current_qty')]);
+		});
+
 		$gs_m->addExpression('previous_amt')->set(function($m,$q){
 			return $q->expr('([0]*[1])',[$m->getElement('rate'),$m->getElement('previous_qty')]);
 		})->type('money');
@@ -70,19 +74,24 @@ class page_generalabstract extends Page {
 			return $q->expr('([0]*[1])',[$m->getElement('rate'),$m->getElement('current_qty')]);
 		})->type('money');
 
+		$gs_m->addExpression('total_amt')->set(function($m,$q){
+			return $q->expr('IFNULL([0],0)+IFNULL([1],0)',[$m->getElement('previous_amt'),$m->getElement('current_amt')]);
+		});
+
 		$gs_m->addCondition([['previous_qty','>',0],['current_qty','>',0]]);
 
 		
 		$g = $v->add('Grid');
-		$g->setModel($gs_m,['name','','description','rate','unit','previous_qty','previous_amt','current_qty','current_amt']);
+		$g->setModel($gs_m,['name','','description','rate','unit','previous_qty','previous_amt','current_qty','current_amt','total_qty','total_amt']);
 
 		$g->addTotals(['previous_amt','current_amt']);
 
-		$current_amt_sum = $gs_m->sum('current_amt')->getOne();
-		$previous_amt_sum = $gs_m->sum('previous_amt')->getOne();
+		$current_amt_sum = round($gs_m->sum('current_amt')->getOne(),2);
+		$previous_amt_sum = round($gs_m->sum('previous_amt')->getOne(),2);
 
 		$str = 'Previous:'. $previous_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.($previous_amt_sum*$client_m['tender_premium']/100).'] Total: '. ($previous_amt_sum + ($previous_amt_sum*$client_m['tender_premium']/100)) .'<br/>';
-		$str .= 'Current:'. $current_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.($current_amt_sum*$client_m['tender_premium']/100).'] Total: '.($current_amt_sum + ($current_amt_sum*$client_m['tender_premium']/100));
+		$str .= 'Current:'. $current_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.($current_amt_sum*$client_m['tender_premium']/100).'] Total: '.($current_amt_sum + ($current_amt_sum*$client_m['tender_premium']/100)) .'<br/>';
+		// $str .= 'Payable: '. (($current_amt_sum + ($current_amt_sum*$client_m['tender_premium']/100)) - ($previous_amt_sum + ($previous_amt_sum*$client_m['tender_premium']/100)));
 		$v->add('View_Info')->setHtml($str);
 
 		if($f->isSubmitted()){
