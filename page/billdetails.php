@@ -21,23 +21,32 @@ class page_billdetails extends Page {
 		$this->title = $client_m['name']. ' - ' . $bill_m['name'];
 		$this->add('View_Info')->set($this->title);
 
+		$c = $this->add('CRUD',$this->add('Model_ACL')->forBillDetail($bill_id));
+		$form = $c->grid->add('Form',null,'grid_buttons',['form/stacked']);
+		$p_f = $form->addField('Dropdown','project')->setEmptyText('All');
+		$p_f->setModel('Project')->addCondition('client_id',$client_id);
+		$p_f->js('change',$form->js()->submit());
+		
 		$bd_m = $this->add('Model_BillDetail');
 		if($project_id){
 			$bd_m->addCondition('project_id',$project_id);
+			$p_f->set($project_id);
 		}
 		$bd_m->addCondition('bill_id',$bill_id);
 
-		$c = $this->add('CRUD',$this->add('Model_ACL')->forBillDetail($bill_id));
 
 		$c->setModel($bd_m);
 
 		if($c->isEditing()){
-			$c->form->getElement('project_id')->getModel()->addCondition('client_id',$client_id);
+			if($c->form->hasElement('project_id'))
+				$c->form->getElement('project_id')->getModel()->addCondition('client_id',$client_id);
 			$c->form->getElement('schedule_id')->getModel()->addCondition('client_id',$client_id);
 		}
 
 		$c->grid->setFormatter('description','wrap');
 		$c->grid->addColumn('grand_total');
+
+
 
 		$c->grid->addHook('formatRow',function($g){
 			if(!isset($g->schedule)){
@@ -70,6 +79,12 @@ class page_billdetails extends Page {
 		if($this->app->auth->model['is_super']){
 			$btn = $c->grid->addButton('ACL');
 			$btn->js('click')->univ()->frameURL('ACL',$vp->getURL());
+		}
+
+		if(!$c->isEditing()){
+			if($form->isSubmitted()){
+				$this->js()->reload(['project_id'=>$form['project']])->execute();
+			}
 		}
 
 	}
