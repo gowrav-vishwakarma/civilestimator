@@ -52,7 +52,7 @@ class page_qtyabstract extends Page {
 				$bdm->addCondition('order',$bill_m['order']);
 				$bdm->addCondition('project_id',$prj_id);
 				return $bdm->sum('qty');
-			});
+			})->type('money');
 		}
 
 		$gs_m->addExpression('total_qty')->set(function($m,$q)use($project_m){
