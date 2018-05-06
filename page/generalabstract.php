@@ -48,7 +48,7 @@ class page_generalabstract extends Page {
 				$bdm->addCondition('project_id',$project_id);
 
 			return $bdm->sum('qty');
-		});
+		})->type('money');
 
 		$gs_m->addExpression('current_qty')->set(function($m,$q)use($bill_m,$client_id,$bill_id,$project_id){
 
@@ -60,11 +60,11 @@ class page_generalabstract extends Page {
 			if($project_id)
 				$bdm->addCondition('project_id',$project_id);
 			return $bdm->sum('qty');
-		});
+		})->type('money');
 
 		$gs_m->addExpression('total_qty')->set(function($m,$q){
 			return $q->expr('IFNULL([0],0)+IFNULL([1],0)',[$m->getElement('previous_qty'),$m->getElement('current_qty')]);
-		});
+		})->type('money');
 
 		$gs_m->addExpression('previous_amt')->set(function($m,$q){
 			return $q->expr('([0]*[1])',[$m->getElement('rate'),$m->getElement('previous_qty')]);
@@ -76,27 +76,36 @@ class page_generalabstract extends Page {
 
 		$gs_m->addExpression('total_amt')->set(function($m,$q){
 			return $q->expr('IFNULL([0],0)+IFNULL([1],0)',[$m->getElement('previous_amt'),$m->getElement('current_amt')]);
-		});
+		})->type('money');
 
 		$gs_m->addCondition([['previous_qty','>',0],['current_qty','>',0]]);
-
 		
 		$g = $v->add('Grid');
-		$g->setModel($gs_m,['name','','description','rate','unit','previous_qty','previous_amt','current_qty','current_amt','total_qty','total_amt']);
+		$g->setModel($gs_m,['name','','description','rate','unit','previous_qty','previous_amt','current_qty','current_amt','total_qty','total_amt','qty']);
+
+		$g->addHook('formatRow',function($g){
+			if($g->model['qty']){
+				$per = $g->model['total_qty']/$g->model['qty']*100;
+				$g->current_row_html['description'] = $g->model['description']."<br/><div style='width:100%;outline:1px solid black !important;height:5px'><div style='width:$per%;height:5px;background-color:black'></div></div><br/>".round($per,2).'%';
+			}
+		});
 
 		$g->addTotals(['previous_amt','current_amt']);
+		$g->removeColumn('qty');
 
 		$current_amt_sum = round($gs_m->sum('current_amt')->getOne(),2);
 		$previous_amt_sum = round($gs_m->sum('previous_amt')->getOne(),2);
 
-		$str = 'Previous:'. $previous_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.($previous_amt_sum*$client_m['tender_premium']/100).'] Total: '. ($previous_amt_sum + ($previous_amt_sum*$client_m['tender_premium']/100)) .'<br/>';
-		$str .= 'Current:'. $current_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.($current_amt_sum*$client_m['tender_premium']/100).'] Total: '.($current_amt_sum + ($current_amt_sum*$client_m['tender_premium']/100)) .'<br/>';
+		$str = 'Previous:'. $previous_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.(round($previous_amt_sum*$client_m['tender_premium']/100,2)).'] Total: '. (round($previous_amt_sum + ($previous_amt_sum*$client_m['tender_premium']/100),2)) .'<br/>';
+		$str .= 'Current:'. $current_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.(round($current_amt_sum*$client_m['tender_premium']/100,2)).'] Total: '.(round($current_amt_sum + ($current_amt_sum*$client_m['tender_premium']/100),2)) .'<br/>';
 		// $str .= 'Payable: '. (($current_amt_sum + ($current_amt_sum*$client_m['tender_premium']/100)) - ($previous_amt_sum + ($previous_amt_sum*$client_m['tender_premium']/100)));
 		$v->add('View_Info')->setHtml($str);
 
 		if($f->isSubmitted()){
 			$v->js()->reload(['project_id'=>$f['projects'],'bill_id'=>$f['bills']])->execute();
 		}
+
+		// $g->add('misc/export');
 
 		$prj_field->js('change',$f->js()->submit());
 		$bill_field->js('change',$f->js()->submit());

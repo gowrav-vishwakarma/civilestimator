@@ -37,6 +37,8 @@ class Frontend extends ApiFrontend {
 
         $this->addLayout('UserMenu');
 
+        $this->template->appendHTML('js_include',
+                '<style> @media print{ .atk-layout-row:first-child, .atk-form {display: none !important; height:0}'."}</style>\n");
 
     }
 
