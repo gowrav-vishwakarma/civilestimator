@@ -35,7 +35,7 @@ class page_qtyabstract extends Page {
 			$bdm->addCondition('order','<',$bill_m['order']);
 
 			return $bdm->sum('qty');
-		});
+		})->type('money');
 
 		$project_m = $this->add('Model_Project');
 		$project_m->addCondition('client_id',$client_id);
@@ -66,7 +66,7 @@ class page_qtyabstract extends Page {
 				$i++;
 			}
 			return $q->expr(implode("+", $sum_arr),$elemnet_arr);
-		});
+		})->type('money');
 		
 		$g = $v->add('Grid');
 		$g->setModel($gs_m,array_merge(['name','','description','rate','unit','previous_qty'],$prj_name_arr,['total_qty']));
