@@ -19,10 +19,11 @@ class Model_BillDetail extends Model_Table{
 		});
 
 
-		$this->addField('number');
-		$this->addField('l');
-		$this->addField('b');
-		$this->addField('h');
+		$this->addField('test');
+		$this->addField('number')->type('number');
+		$this->addField('l')->type('number');
+		$this->addField('b')->type('number');
+		$this->addField('h')->type('number');
 
 		$this->addExpression('qty')->set('(number*l*b*h)');
 		
@@ -36,7 +37,7 @@ class Model_BillDetail extends Model_Table{
 
 		$this->setOrder('schedule_id');
 
-		$this->add('dynamic_model/Controller_AutoCreator');
+		$this->add('dynamic_model/Controller_AutoCreator',['engine'=>'INNODB']);
 
 	}
 }

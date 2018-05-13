@@ -7,6 +7,7 @@ class Model_Bill extends Model_Table{
 	function init(){
 		parent::init();
 
+		$this->addField('code')->mandatory(true);
 		$this->hasOne('Client','client_id');
 		$this->addField('name')->mandatory(true);
 		$this->addField('order')->type('int');

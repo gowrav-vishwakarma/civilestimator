@@ -2,8 +2,8 @@
 
 
 class page_billdetails extends Page {
-	function init(){
-		parent::init();
+	
+	function page_index(){
 
 		$client_id = $this->app->stickyGET('client_id');
 		$bill_id = $this->app->stickyGET('bill_id');
@@ -11,6 +11,9 @@ class page_billdetails extends Page {
 
 		$vp = $this->add('VirtualPage');
 		$vp->set([$this,'manage_bill_detail_acl']);
+
+		$vpimport = $this->add('VirtualPage');
+		$vpimport->set([$this,'import_data']);
 
 		$client_m = $this->add('Model_Client');
 		$client_m->load($client_id);
@@ -23,9 +26,13 @@ class page_billdetails extends Page {
 
 		$c = $this->add('CRUD',$this->add('Model_ACL')->forBillDetail($bill_id));
 		$form = $c->grid->add('Form',null,'grid_buttons',['form/stacked']);
-		$p_f = $form->addField('Dropdown','project')->setEmptyText('All');
-		$p_f->setModel('Project')->addCondition('client_id',$client_id);
-		$p_f->js('change',$form->js()->submit());
+		$p_f = $form->addField('autocomplete/Basic','project');
+		$prj_m = $this->add('Model_Project');
+		$prj_m->addExpression('name_with_code')->set('CONCAT(name," - ",code)');
+		$prj_m->addCondition('client_id',$client_id);
+		$prj_m->title_field='name_with_code';
+		$p_f->setModel($prj_m);
+		$form->addSubmit('Filter');
 		
 		$bd_m = $this->add('Model_BillDetail');
 		if($project_id){
@@ -79,6 +86,9 @@ class page_billdetails extends Page {
 		if($this->app->auth->model['is_super']){
 			$btn = $c->grid->addButton('ACL');
 			$btn->js('click')->univ()->frameURL('ACL',$vp->getURL());
+
+			$btn = $c->grid->addButton('Import');
+			$btn->js('click')->univ()->frameURL('Import',$vpimport->getURL());
 		}
 
 		if(!$c->isEditing()){
@@ -105,5 +115,106 @@ class page_billdetails extends Page {
 
 		$c = $page->add('CRUD');
 		$c->setModel($acl_m,['staff_id','allow_add','allow_edit','allow_del'],['staff','allow_add','allow_edit','allow_del']);
+	}
+
+	function import_data($p){
+
+		$client_id = $this->app->stickyGET('client_id');
+		$bill_id = $this->app->stickyGET('bill_id');
+		$project_id = $this->app->stickyGET('project_id');
+
+
+		$form = $p->add('Form');
+		$form->addSubmit('Download Sample File')->addClass('btn btn-primary');
+		
+		if($_GET['download_sample_csv_file']){
+			$output = ['g_schdule_code','number','l','b','h','narration','from_rd','to_rd'];
+			$output = implode(",", $output);
+	    	header("Content-type: text/csv");
+	        header("Content-disposition: attachment; filename=\"sample_xepan_isp_user_import.csv\"");
+	        header("Content-Length: " . strlen($output));
+	        header("Content-Transfer-Encoding: binary");
+	        print $output;
+	        exit;
+		}
+
+		if($form->isSubmitted()){
+			$form->js()->univ()->newWindow($form->app->url('.',['download_sample_csv_file'=>true]))->execute();
+		}	
+
+		if(!$project_id){
+			$p->add('View_Error')->set('Project Must be filtered to import data');
+			return;
+		}
+		$p->add('View')->setElement('iframe')->setAttr('src',$this->api->url('./execute',array('cut_page'=>1)))->setAttr('width','100%');
+
+	}
+
+	function page_execute(){
+
+		ini_set("memory_limit", "-1");
+		set_time_limit(0);
+
+		$client_id = $this->app->stickyGET('client_id');
+		$bill_id = $this->app->stickyGET('bill_id');
+		$project_id = $this->app->stickyGET('project_id');
+		
+
+		$form= $this->add('Form');
+		$form->template->loadTemplateFromString("<form method='POST' action='".$this->api->url(null,array('cut_page'=>1))."' enctype='multipart/form-data'>
+			<input type='file' name='csv_file'/>
+			<input type='submit' value='Upload'/>
+			</form>"
+			);
+
+		if($_FILES['csv_file']){
+			if ( $_FILES["csv_file"]["error"] > 0 ) {
+				$this->add( 'View_Error' )->set( "Error: " . $_FILES["csv_file"]["error"] );
+			}else{
+				$mimes = ['text/comma-separated-values', 'text/csv', 'application/csv', 'application/excel', 'application/vnd.ms-excel', 'application/vnd.msexcel', 'text/anytext'];
+				if(!in_array($_FILES['csv_file']['type'],$mimes)){
+					$this->add('View_Error')->set('Only CSV Files allowed');
+					return;
+				}
+
+				$importer = new CSVImporter($_FILES['csv_file']['tmp_name'],true,',');
+				$data = $importer->get();
+
+				foreach ($data as $datum) {
+					$g_schdule_code = $this->add('Model_GSchedule')->tryLoadBy('name',$datum['g_schdule_code']);
+					if(!$g_schdule_code->loaded()){
+						throw new Exception("G schedule code not found in system for ". print_r($datum,true). ' data', 1);
+					}
+					if(!is_numeric($datum['number']) || !is_numeric($datum['l']) || !is_numeric($datum['b']) || !is_numeric($datum['b']) || !is_numeric($datum['h']) ){
+							throw new Exception('data contained non numeric value for '. print_r($datum,true), 1);
+					}
+				}
+
+				foreach ($data as $datum) {
+
+					$g_schdule_code = $this->add('Model_GSchedule')->LoadBy('name',$datum['g_schdule_code']);
+
+					$bill_detail = $this->add('Model_BillDetail');
+					$bill_detail['project_id'] = $project_id;
+					$bill_detail['bill_id'] = $bill_id;
+					$bill_detail['schedule_id'] = $g_schdule_code->id;
+					$bill_detail['number'] = $datum['number'];
+					$bill_detail['l'] = $datum['l'];
+					$bill_detail['b'] = $datum['b'];
+					$bill_detail['h'] = $datum['h'];
+					$bill_detail['narration'] = $datum['narration'];
+					$bill_detail['from_rd'] = $datum['from_rd'];
+					$bill_detail['to_rd'] = $datum['to_rd'];
+
+					$bill_detail->save();
+
+				}
+				
+
+				
+				$this->add('View')->set('All Data Imported');
+			}
+		}
+
 	}
 }

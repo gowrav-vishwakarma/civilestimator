@@ -10,7 +10,7 @@ class Frontend extends ApiFrontend {
         $this->api->pathfinder
             ->addLocation(array(
                 'addons' => array('vendor','shared/atk4-addons'),
-                'template'=>array('.')
+                'template'=>array('.','shared/atk4-addons')
             ))
             ->setBasePath($this->pathfinder->base_location->getPath());
         
