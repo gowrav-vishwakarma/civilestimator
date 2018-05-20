@@ -28,10 +28,18 @@ class page_generalabstract extends Page {
 		$v->add('View_Info')->set($this->title);
 
 		$f = $v->add('Form');
-		$prj_field = $f->addField('DropDown','projects')->setEmptyText('All')->set($project_id);
+		$prj_field = $f->addField('autocomplete/Basic','projects')->set($project_id);
 		$bill_field = $f->addField('DropDown','bills')->set($bill_id);
-		$prj_field->setModel('Project')->addCondition('client_id',$client_id);
+		$prj_model_for_field = $this->add('Model_Project');
+		$prj_model_for_field->addCondition('client_id',$client_id);
+
+		$prj_model_for_field->addExpression('name_with_code')->set('CONCAT(name," - ",IFNULL(code,""))');
+		$prj_model_for_field->title_field='name_with_code';
+
+		$prj_field->setModel($prj_model_for_field);
 		$bill_field->setModel('Bill')->addCondition('client_id',$client_id);
+
+		$f->addSubmit('Filter');
 
 		$gs_m = $this->add('Model_GSchedule');
 		$gs_m->addCondition('client_id',$client_id);
