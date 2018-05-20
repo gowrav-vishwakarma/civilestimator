@@ -98,14 +98,16 @@ class page_generalabstract extends Page {
 			}
 		});
 
-		$g->addTotals(['previous_amt','current_amt']);
+		$g->addTotals(['previous_amt','current_amt','total_amt']);
 		$g->removeColumn('qty');
 
 		$current_amt_sum = round($gs_m->sum('current_amt')->getOne(),2);
 		$previous_amt_sum = round($gs_m->sum('previous_amt')->getOne(),2);
+		$total_amt_sum = round($gs_m->sum('total_amt')->getOne(),2);
 
-		$str = 'Previous:'. $previous_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.(round($previous_amt_sum*$client_m['tender_premium']/100,2)).'] Total: '. (round($previous_amt_sum + ($previous_amt_sum*$client_m['tender_premium']/100),2)) .'<br/>';
-		$str .= 'Current:'. $current_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.(round($current_amt_sum*$client_m['tender_premium']/100,2)).'] Total: '.(round($current_amt_sum + ($current_amt_sum*$client_m['tender_premium']/100),2)) .'<br/>';
+		$str = 'Total: '. $total_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.(round($total_amt_sum*$client_m['tender_premium']/100,2)).'] Total: '. (round($total_amt_sum + ($total_amt_sum*$client_m['tender_premium']/100),2)) .'<br/>';
+		$str .= 'Previous: '. $previous_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.(round($previous_amt_sum*$client_m['tender_premium']/100,2)).'] Total: '. (round($previous_amt_sum + ($previous_amt_sum*$client_m['tender_premium']/100),2)) .'<br/>';
+		$str .= '<b>Current: '. $current_amt_sum. ' [@ '.$client_m['tender_premium'].'% = '.(round($current_amt_sum*$client_m['tender_premium']/100,2)).'] Total: '.(round($current_amt_sum + ($current_amt_sum*$client_m['tender_premium']/100),2)) .'<br/></b>';
 		// $str .= 'Payable: '. (($current_amt_sum + ($current_amt_sum*$client_m['tender_premium']/100)) - ($previous_amt_sum + ($previous_amt_sum*$client_m['tender_premium']/100)));
 		$v->add('View_Info')->setHtml($str);
 
