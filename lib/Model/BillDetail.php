@@ -19,7 +19,6 @@ class Model_BillDetail extends Model_Table{
 		});
 
 
-		$this->addField('test');
 		$this->addField('number')->type('number');
 		$this->addField('l')->type('number');
 		$this->addField('b')->type('number');
