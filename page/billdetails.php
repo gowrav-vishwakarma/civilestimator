@@ -19,9 +19,17 @@ class page_billdetails extends Page {
 		$client_m->load($client_id);
 
 		$bill_m = $this->add('Model_Bill');
-		$bill_m->load($bill_id);
+		if($bill_id){
+			$bill_m->load($bill_id);
+		}
 
-		$this->title = $client_m['name']. ' - ' . $bill_m['name'];
+		$proj_name_m = $this->add('Model_Project');
+		
+		if($project_id){
+			$proj_name_m->load($project_id);
+		}
+
+		$this->title = $client_m['name']. ' - ' . $bill_m['name']. ' - '. $proj_name_m['name'];
 		$this->add('View_Info')->set($this->title);
 
 		$c = $this->add('CRUD',$this->add('Model_ACL')->forBillDetail($bill_id));
@@ -32,6 +40,12 @@ class page_billdetails extends Page {
 		$prj_m->addCondition('client_id',$client_id);
 		$prj_m->title_field='name_with_code';
 		$p_f->setModel($prj_m);
+
+		$b_f = $form->addField('DropDown','bill_id');
+		$b_f->setEmptyText('All');
+		$b_f->setModel('Model_Bill')->addCondition('client_id',$client_id);
+		$b_f->set($bill_id);
+
 		$form->addSubmit('Filter');
 		
 		$bd_m = $this->add('Model_BillDetail');
@@ -39,7 +53,10 @@ class page_billdetails extends Page {
 			$bd_m->addCondition('project_id',$project_id);
 			$p_f->set($project_id);
 		}
-		$bd_m->addCondition('bill_id',$bill_id);
+
+
+		if($bill_id)
+			$bd_m->addCondition('bill_id',$bill_id);
 
 
 		$c->setModel($bd_m);
@@ -93,7 +110,7 @@ class page_billdetails extends Page {
 
 		if(!$c->isEditing()){
 			if($form->isSubmitted()){
-				$this->js()->reload(['project_id'=>$form['project']])->execute();
+				$this->js()->reload(['project_id'=>$form['project'],'bill_id'=>$form['bill_id']?:0])->execute();
 			}
 		}
 
