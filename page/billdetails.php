@@ -110,7 +110,7 @@ class page_billdetails extends Page {
 
 		if(!$c->isEditing()){
 			if($form->isSubmitted()){
-				$this->js()->reload(['project_id'=>$form['project'],'bill_id'=>$form['bill_id']?:0])->execute();
+				$this->app->redirect($this->app->url((['project_id'=>$form['project'],'bill_id'=>$form['bill_id']?:0])));
 			}
 		}
 
