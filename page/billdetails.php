@@ -124,7 +124,8 @@ class page_billdetails extends Page {
 		$client_m = $this->add('Model_Client');
 		if($client_id)
 			$client_m->load($client_id);
-		$bill_m = $this->add('Model_Bill')
+		$bill_m = $this->add('Model_Bill');
+		
 		if($bill_id)
 			$bill_m->load($bill_id);
 
