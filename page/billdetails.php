@@ -121,14 +121,19 @@ class page_billdetails extends Page {
 		$client_id = $page->app->stickyGET('client_id');
 		$bill_id = $this->app->stickyGET('bill_id');
 
-		$client_m = $this->add('Model_Client')->load($client_id);
-		$bill_m = $this->add('Model_Bill')->load($bill_id);
+		$client_m = $this->add('Model_Client');
+		if($client_id)
+			$client_m->load($client_id);
+		$bill_m = $this->add('Model_Bill')
+		if($bill_id)
+			$bill_m->load($bill_id);
 
 		$page->add('View_Info')->set($this->app->auth->model['name'].' for '. $client_m['name'].'\'s '. $bill_m['name']);
 
 		$acl_m = $page->add('Model_ACL');
 		// $acl_m->addCondition('staff_id',$page->app->auth->model->id);
-		$acl_m->addCondition('details_of_bill_id',$bill_id);
+		if($bill_id)
+			$acl_m->addCondition('details_of_bill_id',$bill_id);
 
 		$c = $page->add('CRUD');
 		$c->setModel($acl_m,['staff_id','allow_add','allow_edit','allow_del'],['staff','allow_add','allow_edit','allow_del']);
