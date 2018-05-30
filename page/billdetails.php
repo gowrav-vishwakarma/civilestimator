@@ -125,7 +125,7 @@ class page_billdetails extends Page {
 		if($client_id)
 			$client_m->load($client_id);
 		$bill_m = $this->add('Model_Bill');
-		
+
 		if($bill_id)
 			$bill_m->load($bill_id);
 
@@ -137,7 +137,7 @@ class page_billdetails extends Page {
 			$acl_m->addCondition('details_of_bill_id',$bill_id);
 
 		$c = $page->add('CRUD');
-		$c->setModel($acl_m,['staff_id','allow_add','allow_edit','allow_del'],['staff','allow_add','allow_edit','allow_del']);
+		$c->setModel($acl_m,['details_of_bill_id','staff_id','allow_add','allow_edit','allow_del'],['details_of_bill','staff','allow_add','allow_edit','allow_del']);
 	}
 
 	function import_data($p){
