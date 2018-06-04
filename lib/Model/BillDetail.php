@@ -24,7 +24,7 @@ class Model_BillDetail extends Model_Table{
 		$this->addField('b')->type('number');
 		$this->addField('h')->type('number');
 
-		$this->addExpression('qty')->set('(number*l*b*h)');
+		$this->addExpression('qty')->set('(number*l*b*h)')->type('money');
 		
 		$this->addExpression('unit')->set(function($m,$q){
 			return $m->refSQL('schedule_id')->fieldQuery('unit');
