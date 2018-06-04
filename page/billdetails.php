@@ -50,7 +50,7 @@ class page_billdetails extends Page {
 		
 		$bd_m = $this->add('Model_BillDetail');
 		$bd_m->setOrder('id');
-		
+
 		if($project_id){
 			$bd_m->addCondition('project_id',$project_id);
 			$p_f->set($project_id);
@@ -97,6 +97,8 @@ class page_billdetails extends Page {
 				$g->current_row['unit']=$g->model['unit'];
 				$g->unit = $g->model['unit'];
 			}
+
+			$g->current_row['grand_total'] = round($g->current_row['grand_total'],2);
 
 		});
 
