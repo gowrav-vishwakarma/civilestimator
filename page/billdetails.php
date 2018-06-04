@@ -49,6 +49,8 @@ class page_billdetails extends Page {
 		$form->addSubmit('Filter');
 		
 		$bd_m = $this->add('Model_BillDetail');
+		$bd_m->setOrder('id');
+		
 		if($project_id){
 			$bd_m->addCondition('project_id',$project_id);
 			$p_f->set($project_id);
