@@ -49,7 +49,7 @@ class page_billdetails extends Page {
 		$form->addSubmit('Filter');
 		
 		$bd_m = $this->add('Model_BillDetail');
-		$bd_m->setOrder('id');
+		$bd_m->setOrder(['schedule_id asc','id asc']);
 
 		if($project_id){
 			$bd_m->addCondition('project_id',$project_id);
