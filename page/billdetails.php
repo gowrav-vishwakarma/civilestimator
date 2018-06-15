@@ -63,6 +63,8 @@ class page_billdetails extends Page {
 
 		$c->setModel($bd_m);
 
+		$c->add('Controller_MultiDelete');
+
 		if($c->isEditing()){
 			if($c->form->hasElement('project_id'))
 				$c->form->getElement('project_id')->getModel()->addCondition('client_id',$client_id);
