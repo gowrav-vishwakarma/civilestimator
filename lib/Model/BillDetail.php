@@ -29,6 +29,12 @@ class Model_BillDetail extends Model_Table{
 		$this->addExpression('unit')->set(function($m,$q){
 			return $m->refSQL('schedule_id')->fieldQuery('unit');
 		});
+
+		$this->addExpression('client_id')->set(function($m,$q){
+			return $m->refSQL('bill_id')->fieldQuery('client_id');
+		});
+
+
 		
 		$this->addField('narration')->type('text');
 		// $this->addField('name')->mandatory(true);

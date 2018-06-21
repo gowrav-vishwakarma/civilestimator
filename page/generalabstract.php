@@ -94,7 +94,10 @@ class page_generalabstract extends Page {
 		$g->addHook('formatRow',function($g){
 			if($g->model['qty']){
 				$per = $g->model['total_qty']/$g->model['qty']*100;
-				$g->current_row_html['description'] = $g->model['description']."<br/><div style='width:100%;outline:1px solid black !important;height:5px'><div style='width:$per%;height:5px;background-color:black'></div></div><br/>".round($per,2).'%';
+				if($per > 100)
+					$g->current_row_html['description'] = $g->model['description']."<br/><div style='width:100%;outline:1px solid black !important;height:5px'><div style='width:100%;height:5px;background-color:red'></div></div><br/>".round($per,2).'% of '.$g->model['qty'].' '. $g->model['unit'];
+				else
+					$g->current_row_html['description'] = $g->model['description']."<br/><div style='width:100%;outline:1px solid black !important;height:5px'><div style='width:$per%;height:5px;background-color:black'></div></div><br/>".round($per,2).'% of '.$g->model['qty'].' '. $g->model['unit'];
 			}
 		});
 

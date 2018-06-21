@@ -49,6 +49,7 @@ class page_billdetails extends Page {
 		$form->addSubmit('Filter');
 		
 		$bd_m = $this->add('Model_BillDetail');
+		$bd_m->addCondition('client_id',$client_id);
 		$bd_m->setOrder(['schedule_id asc','id asc']);
 
 		if($project_id){
@@ -210,7 +211,11 @@ class page_billdetails extends Page {
 				$data = $importer->get();
 
 				foreach ($data as $datum) {
-					$g_schdule_code = $this->add('Model_GSchedule')->tryLoadBy('name',$datum['g_schdule_code']);
+					$g_schdule_code = $this->add('Model_GSchedule')
+										->addCondition('client_id',$client_id)
+										->addCondition('name',$datum['g_schdule_code'])
+										->tryLoadAny();
+
 					if(!$g_schdule_code->loaded()){
 						throw new Exception("G schedule code not found in system for ". print_r($datum,true). ' data', 1);
 					}
@@ -221,7 +226,10 @@ class page_billdetails extends Page {
 
 				foreach ($data as $datum) {
 
-					$g_schdule_code = $this->add('Model_GSchedule')->LoadBy('name',$datum['g_schdule_code']);
+					$g_schdule_code = $this->add('Model_GSchedule')
+										->addCondition('client_id',$client_id)
+										->addCondition('name',$datum['g_schdule_code'])
+										->tryLoadAny();
 
 					$bill_detail = $this->add('Model_BillDetail');
 					$bill_detail['project_id'] = $project_id;
