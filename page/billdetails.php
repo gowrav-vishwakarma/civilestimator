@@ -73,6 +73,7 @@ class page_billdetails extends Page {
 		}
 
 		$c->grid->setFormatter('description','wrap');
+		$c->grid->setFormatter('narration','wrap');
 		$c->grid->addColumn('grand_total');
 
 
